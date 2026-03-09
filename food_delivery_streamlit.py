@@ -9,7 +9,7 @@ st.title("Food Data Analysis Dashboard")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv(r"C:\Users\Kowsh\OneDrive\Desktop\vscode_project\Food delivery project\data\food_delivery_cleaned.csv")
+    df = pd.read_csv("food_delivery_cleaned.csv")
     return df
 df = load_data()
 
@@ -368,4 +368,5 @@ elif option == 'Cancellation reason analysis':
         ax.set_xlabel('Cancellation Category')
         ax.set_ylabel('Cancelled Orders')
         st.pyplot(fig,use_container_width=True)
+
 
