@@ -1,33 +1,43 @@
 import streamlit  as st
-st.set_page_config(layout="wide")
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 warnings.filterwarnings("ignore")
+st.set_page_config(page_title="Food Delivery Dashboard",layout="wide")
 
-st.title("Food Data Analysis Dashboard")
+#UI helper function
+def center_plot(fig,ratio = [1,2,1]):
+    left,center,right = st.columns(ratio)
+    with center:
+        st.pyplot(fig)
+
+def center_df(data):
+    left,center,right = st.columns([1,2,1])
+    with center:
+        st.dataframe(data)
+
 
 @st.cache_data
 def load_data():
     df = pd.read_csv("food_delivery_cleaned.csv")
     return df
 df = load_data()
+#title 
+st.title("Food Data Analysis Dashboard")
 
 
 with st.expander("Dataset Preview"):
     st.dataframe(df.head())
 
-st.subheader("Dataset Overview")
+st.header("📊 Dataset Overview")
+st.markdown("""
+    This dataset includes details of food delivery orders such as customer data, restaurant information, order value, delivery time, and ratings.
+    It is useful for analyzing sales, customer preferences, and delivery efficiency.
+""")
+st.subheader('Key Metrics')
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Cities", df['City'].nunique())
-col2.metric("Restaurants", df['Restaurant_Name'].nunique())
-col3.metric("Customers", df['Customer_ID'].nunique())
-
-st.header('Key Metrics')
 total_orders = len(df)
 total_revenue = df['Order_Value'].sum()
 avg_order_value = df['Order_Value'].mean()
@@ -35,17 +45,24 @@ avg_delivery_time = df['Delivery_Time_Min'].mean()
 avg_rating = df['Delivery_Rating'].mean()
 cancel_rate = (df['Order_Status'].str.lower() == 'cancelled').mean() * 100
 
-col1, col2, col3 = st.columns(3)
-col4, col5, col6 = st.columns(3)
+left,center,right = st.columns([1,3,1])
+with center:
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Cities", df['City'].nunique())
+    col2.metric("Restaurants", df['Restaurant_Name'].nunique())
+    col3.metric("Customers", df['Customer_ID'].nunique())
+
+    col1, col2, col3 = st.columns(3)
+    col4, col5, col6 = st.columns(3)
+
+    col1.metric("Total Orders", f"{total_orders:,}")
+    col2.metric("Total Revenue", f"₹{total_revenue:,.0f}")
+    col3.metric("Average Order Value", f"₹{avg_order_value:,.2f}")
+    col4.metric("Avg Delivery Time", f"{avg_delivery_time:.2f} min")
+    col5.metric("Cancellation Rate", f"{cancel_rate:.2f}%")
+    col6.metric("Avg Delivery Rating", f"{avg_rating:.2f}")
 
 
-col1.metric("Total Orders", f"{total_orders:,}")
-col2.metric("Total Revenue", f"₹{total_revenue:,.0f}")
-col3 = st.columns(1)[0]
-col3.metric("Average Order Value", f"₹{avg_order_value:,.2f}")
-col4.metric("Avg Delivery Time", f"{avg_delivery_time:.2f} min")
-col5.metric("Cancellation Rate", f"{cancel_rate:.2f}%")
-col6.metric("Avg Delivery Rating", f"{avg_rating:.2f}")
 
 st.markdown("---")
 st.header("Analytical Queries")
@@ -72,7 +89,7 @@ if option == 'Identify top-spending customers':
     st.subheader("Top-Spending Customers")
     if st.button("Run Query",key="top_spenders"):
         top_spenders = df.groupby('Customer_ID')['Order_Value'].sum().nlargest(10).reset_index()
-        st.dataframe(top_spenders)
+        center_df(top_spenders)
 
 elif option == 'Analyze age group vs order value':
     st.subheader("Age Group vs Order Value")
@@ -86,15 +103,13 @@ elif option == 'Analyze age group vs order value':
                       '55+'
         )
         age_order_value = df.groupby('Age_Group')['Order_Value'].mean().reset_index()
-        st.dataframe(age_order_value)
-        fig, ax = plt.subplots(figsize=(4,2.5))
+        center_df(age_order_value)
+        fig, ax = plt.subplots(figsize=(5.5,3))
         sns.barplot(data=age_order_value, x='Age_Group', y='Order_Value', ax=ax)
         ax.set_title('Average Order Value by Age Group',fontsize = 10)
-        ax.set_xlabel('Age Group',fontsize = 9)
-        ax.set_ylabel('Average Order Value',fontsize = 9)
-        plt.xticks(rotation=0,fontsize = 8)
+        
         plt.tight_layout()
-        st.pyplot(fig)
+        center_plot(fig)
         
 
 elif option == 'Weekend vs weekday order patterns':
@@ -116,13 +131,11 @@ elif option == 'Weekend vs weekday order patterns':
                   avg_delivery_time=('Delivery_Time_Min','mean')
               ).reset_index()
         )
-        st.dataframe(weekend_weekday)
-        fig, ax = plt.subplots(figsize=(8,6))
+        center_df(weekend_weekday)
+        fig, ax = plt.subplots(figsize=(6,3))
         sns.barplot(data=weekend_weekday, x='Day_Type', y='Total_revenue', ax=ax, palette='Set2')
         ax.set_title('Weekend vs Weekday Order Patterns')
-        ax.set_xlabel('Day Type')
-        ax.set_ylabel('Total Revenue')
-        st.pyplot(fig,use_container_width=True)
+        center_plot(fig)
 
 elif option == 'Monthly revenue trends':
     st.subheader("Monthly Revenue Trends")
@@ -143,14 +156,11 @@ elif option == 'Monthly revenue trends':
                   average_order_value=('Order_Value','mean')
               ).reset_index()
         )
-        st.dataframe(monthly_revenue)
+        center_df(monthly_revenue)
         fig, ax = plt.subplots(figsize=(12,6))
         sns.lineplot(data=monthly_revenue, x='month', y='monthly_revenue', marker='o', ax=ax)
         ax.set_title('Monthly Revenue Trends')
-        ax.set_xlabel('Month')
-        ax.set_ylabel('Monthly Revenue')
-        plt.xticks(rotation=45)
-        st.pyplot(fig,use_container_width=True)
+        center_plot(fig)
 
 elif option == 'Impact of discounts on profit':
     st.subheader("Impact of Discounts on Profit")
@@ -175,13 +185,11 @@ elif option == 'Impact of discounts on profit':
                   total_revenue=('Order_Value','sum')
               ).reset_index()
         )
-        st.dataframe(discount_profit)
+        center_df(discount_profit)
         fig, ax = plt.subplots(figsize=(10,6))
         sns.barplot(data=discount_profit, x='discount_category', y='avg_profit',palette='husl', ax=ax)
         ax.set_title('Impact of Discounts on Profit')
-        ax.set_xlabel('Discount Category')
-        ax.set_ylabel('Average Profit')
-        st.pyplot(fig,use_container_width=True)
+        center_plot(fig)
 
 elif option == 'High-revenue cities and cuisines':
     st.subheader("High-Revenue Cities and Cuisines")
@@ -193,15 +201,11 @@ elif option == 'High-revenue cities and cuisines':
               ).reset_index()
                 
         )
-        st.dataframe(high_revenue)
+        center_df(high_revenue)
         fig, ax = plt.subplots(figsize=(10,6))
         sns.barplot(data=high_revenue, x='City', y='total_revenue', hue='Cuisine_Type', ax=ax)
         ax.set_title('Top Performing Cuisine by City')
-        ax.set_xlabel('City')
-        ax.set_ylabel('Total Revenue')
-        plt.xticks(rotation = 0)
-        plt.tight_layout()
-        st.pyplot(fig,use_container_width=True)
+        center_plot(fig)
 
 elif option == 'Average delivery time by city':
     st.subheader("Average Delivery Time by City")
@@ -213,7 +217,7 @@ elif option == 'Average delivery time by city':
               ).reset_index()
                .sort_values('avg_delivery_time', ascending=False)
         )
-        st.dataframe(delivery_time_city)
+        center_df(delivery_time_city)
         
 elif option == 'Distance vs delivery delay analysis':
     st.subheader("Distance vs Delivery Delay Analysis")
@@ -230,17 +234,15 @@ elif option == 'Distance vs delivery delay analysis':
              distance_delivery_delay['Distance_km']
              .apply(lambda x: x.mid)   
 )
-        st.dataframe(distance_delivery_delay)
+        center_df(distance_delivery_delay)
 
         fig, ax = plt.subplots(figsize=(6,4))
         sns.scatterplot(data=distance_delivery_delay, x='Distance_km', y='avg_delivery_delay', size='total_orders',sizes = (50,300),
                         alpha = 0.7,legend = 'brief', ax=ax)
         ax.set_title('Distance vs Average Delivery Delay')
-        ax.set_xlabel('Distance (km)')
-        ax.set_ylabel('Average Delivery Delay')
         ax.grid(True, linestyle='--', alpha=0.5)
         plt.tight_layout()
-        st.pyplot(fig,use_container_width=True)
+        center_plot(fig)
 
 elif option == 'Delivery rating vs delivery time':
     st.subheader("Delivery Rating vs Delivery Time")
@@ -253,7 +255,7 @@ elif option == 'Delivery rating vs delivery time':
                 .reset_index()
                 .sort_values('avg_delivery_time', ascending=False)
         )
-        st.dataframe(rating_delivery_time)
+        center_df(rating_delivery_time)
         
 elif option == 'Top-rated restaurants':
     st.subheader("Top-Rated Restaurants")
@@ -267,7 +269,7 @@ elif option == 'Top-rated restaurants':
                  .sort_values(by='top_rated_restaurants_Rating',ascending=False)
                  .head(10)
         )
-        st.dataframe(top_rated_restaurants)
+        center_df(top_rated_restaurants)
     
 elif option == 'Cancellation rate by restaurant':
     st.subheader("Cancellation Rate by Restaurant")
@@ -287,7 +289,7 @@ elif option == 'Cancellation rate by restaurant':
                 .sort_values(by=['cancellation_rate_percent','total_revenue'], ascending=False)
                 .head(10)
         )
-        st.dataframe(cancellation_rate)
+        center_df(cancellation_rate)
 
 elif option == 'Cuisine-wise performance':
     st.subheader("Cuisine-wise Performance")
@@ -303,19 +305,15 @@ elif option == 'Cuisine-wise performance':
               ).reset_index()
                .sort_values('total_order_value', ascending=False)
         )
-        st.dataframe(cuisine_performance) 
+        center_df(cuisine_performance) 
         fig, ax = plt.subplots(figsize=(10,6))
         sns.barplot(data=cuisine_performance, x='Cuisine_Type', y='total_order_value', ax=ax, palette='Set2')
         ax.set_title('Cuisine-wise Performance')
-        ax.set_xlabel('Cuisine Type')
-        ax.set_ylabel('Total Order Value')
-        st.pyplot(fig,use_container_width=True)
-
+        center_plot(fig)
 elif option == 'Peak hour demand analysis':
     st.subheader("Peak Hour Demand Analysis")
     if st.button("Run Query",key="peak_hour_demand"):
-        #df['order_date'] = pd.to_datetime(df['order_date'])
-        #df['hour'] = df['order_date'].dt.hour
+        
         Peak_Hour = (
                 df.groupby('Peak_Hour')
                 .agg(
@@ -325,13 +323,11 @@ elif option == 'Peak hour demand analysis':
                     ).reset_index()
                      .sort_values(by='total_order_value',ascending=False)
         )       
-        st.dataframe(Peak_Hour)
+        center_df(Peak_Hour)
         fig, ax = plt.subplots(figsize=(10,6))
         sns.barplot(data=Peak_Hour, x='Peak_Hour', y='total_order_value',palette='pastel',ax=ax)
         ax.set_title('Peak Hour Demand Analysis')
-        ax.set_xlabel('Peak Hour')
-        ax.set_ylabel('Total Order Value')
-        st.pyplot(fig,use_container_width=True)
+        center_plot(fig)
 
 elif option == 'Payment mode preferences':
     st.subheader("Payment Mode Preferences")
@@ -346,14 +342,11 @@ elif option == 'Payment mode preferences':
                 ).reset_index()
                  .sort_values('count', ascending=False)
         )
-        st.dataframe(payment_mode)
+        center_df(payment_mode)
         fig, ax = plt.subplots(figsize=(10,6))
         sns.barplot(data=payment_mode, x='Payment_Mode', y='count', ax=ax, palette='Set2')
         ax.set_title('Payment Mode Preferences')    
-        ax.set_xlabel('Payment Mode')
-        ax.set_ylabel('Count')
-        st.pyplot(fig,use_container_width=True)
-
+        center_plot(fig)
 elif option == 'Cancellation reason analysis':
     st.subheader("Cancellation Reason Analysis")
     if st.button("Run Query", key="cancellation_reason_analysis"):
@@ -371,11 +364,8 @@ elif option == 'Cancellation reason analysis':
         ).reset_index()
          .sort_values('cancelled_orders', ascending=False)
         )
-        st.dataframe(cancellation_reason_analysis)
+        center_df(cancellation_reason_analysis)
         fig, ax = plt.subplots(figsize=(10,6))
         sns.barplot(data=cancellation_reason_analysis, x='Cancellation_Category', y='cancelled_orders', ax=ax, palette='Set2')
         ax.set_title('Cancellation Reason Analysis')    
-        ax.set_xlabel('Cancellation Category')
-        ax.set_ylabel('Cancelled Orders')
-        st.pyplot(fig,use_container_width=True)
-
+        center_plot(fig)
