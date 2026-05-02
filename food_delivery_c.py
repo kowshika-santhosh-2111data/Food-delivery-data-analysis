@@ -79,52 +79,46 @@ data.duplicated().sum()
 #convert data types
 from datetime import date
 # ID columns
-data['Order_ID'] = data['Order_ID'].astype(str)
-data['Customer_ID'] = data['Customer_ID'].astype(str)
-data['Restaurant_ID'] = data['Restaurant_ID'].astype(str)
-data['Delivery_Partner_ID'] = data['Delivery_Partner_ID'].astype(str)
+id_cols = ['Order_ID','Customer_ID','Restaurant_ID','Delivery_Partner_ID']
+for col in id_cols:
+    data[col] = data[col].astype(str)
 
 # categorical columns
-data['Customer_Gender'] = data['Customer_Gender'].astype('category')
-data['City'] = data['City'].astype('category')
-data['Area'] = data['Area'].astype('category')
-data['Cuisine_Type'] = data['Cuisine_Type'].astype('category')
-data['Payment_Mode'] = data['Payment_Mode'].astype('category')
-data['Order_Status'] = data['Order_Status'].astype('category')
-data['Cancellation_Reason'] = data['Cancellation_Reason'].astype('category')
+cat_cols = ['Customer_Gender','City','Area','Cuisine_Type',
+            'Payment_Mode','Order_Status','Cancellation_Reason']
+for col in cat_cols:
+    data[col] = data[col].astype('category')
 
-# date & time
+# date columns
 data['Order_Date'] = pd.to_datetime(data['Order_Date'], errors='coerce')
 data['Order_Time'] = pd.to_datetime(data['Order_Time'], errors='coerce')
 
 # numeric columns
-data['Customer_Age'] = data['Customer_Age'].astype(float)
-data['Delivery_Time_Min'] = data['Delivery_Time_Min'].astype(int)
-data['Distance_km'] = data['Distance_km'].astype(float)
-data['Order_Value'] = data['Order_Value'].astype(float)
-data['Discount_Applied'] = data['Discount_Applied'].astype(float)
-data['Final_Amount'] = data['Final_Amount'].astype(float)
-data['Delivery_Rating'] = data['Delivery_Rating'].astype(float)
-data['Restaurant_Rating'] = data['Restaurant_Rating'].astype(float)
-data['Profit_Margin'] = data['Profit_Margin'].astype(float)
+num_cols = ['Customer_Age','Distance_km','Order_Value',
+            'Discount_Applied','Final_Amount','Delivery_Rating',
+            'Restaurant_Rating','Profit_Margin']
+
+for col in num_cols:
+    data[col] = pd.to_numeric(data[col], errors='coerce')
+
+# special case (int)
+data['Delivery_Time_Min'] = data['Delivery_Time_Min'].fillna(0).astype(int)
 
 #check invalid numeric values
 ['Customer_Age','Delivery_Time_Min','Distance_km',
 'Order_Value','Final_Amount','Profit_Margin','Delivery_Rating',
 'Restaurant_Rating']
 data[data['Customer_Age']<0]
-data[(data['Delivery_Time_Min']>30)|(data['Delivery_Time_Min']<90)]
+data[(data['Delivery_Time_Min']<30)|(data['Delivery_Time_Min']>90)]
 data[data['Delivery_Rating']<1|(data['Delivery_Rating']>5)]
 data[data['Restaurant_Rating']<1|(data['Restaurant_Rating']>5)]
+
 
 #check date & time format
 data['Order_Date'] = pd.to_datetime(data['Order_Date'], errors='coerce')
 data['Order_Date'].fillna(data['Order_Date'].mode()[0],inplace = True)
+data['Order_Time'] = pd.to_datetime(data['Order_Time'], errors='coerce').dt.time
 
-data['Order_Time'] = pd.to_datetime(data['Order_Time'], errors='coerce')
-data['Order_Time'].fillna(data['Order_Time'].mode()[0],inplace = True)
-
-data[['Order_Date','Order_Time']]
 
 #handling string operation
 #remove special charcters
@@ -136,16 +130,10 @@ data['Customer_Gender'] = data['Customer_Gender'].str.replace(r'(?i)^f.*', 'Fema
 data['Payment_Mode'] = data['Payment_Mode'].str.title()
 #remove multiple space
 data['Area'] = data['Area'].str.replace(r'\s+', ' ', regex=True)
-#standardize time format
-data['Order_Time'] = pd.to_datetime(data['Order_Time'], errors='coerce').dt.time
 #detcet invalid charcters
 data[data['City'].str.contains(r'[^a-zA-Z\s]', na=False)]
-
+#check unique values
 data['Peak_Hour'].unique()
-
-#check catogorical inconsistency
-#= [Customer_Gender,City,Area,Cuisine_Type,
-#Payment_Mode,Order_Status,Cancellation_Reason]
 
 #check string inconsistent data
 data_inconsistent = {
@@ -160,7 +148,7 @@ data_inconsistent = {
 }
 
 #standardize
-data['Customer_Gender'] = data['Customer_Gender'].replace({
+data['Customer_Gender'] = data['Customer_Gender'].str.lower().replace({
     'm': 'Male',
     'male': 'Male',
     'f': 'Female',
@@ -169,7 +157,7 @@ data['Customer_Gender'] = data['Customer_Gender'].replace({
     'other': 'Other'
 })
 
-data['City'] = data['City'].replace({
+data['City'] = data['City'].str.lower().replace({
     'che':'Chennai',
     'chennai':'Chennai',
 
@@ -179,7 +167,7 @@ data['City'] = data['City'].replace({
     'hyderabad':'Hyderabad'
 })
 
-data['Area'] = data['Area'].replace({
+data['Area'] = data['Area'].str.lower().str.lower().replace({
     'central':'Central',
     'north':'North',
     'south':'South',
@@ -187,7 +175,7 @@ data['Area'] = data['Area'].replace({
     'west':'West'
 })
 
-data["Cuisine_Type"] = data["Cuisine_Type"].replace({
+data["Cuisine_Type"] = data["Cuisine_Type"].str.lower().replace({
     "arabian": "Arabian",
     "indian": "South Indian",
     "chinese": "Chinese",
@@ -195,7 +183,7 @@ data["Cuisine_Type"] = data["Cuisine_Type"].replace({
     "mexican":"Mexican"
 })
 
-data['Payment_Mode'] = data['Payment_Mode'].replace({
+data['Payment_Mode'] = data['Payment_Mode'].str.lower().replace({
     "upi payment" :"UPI",
     "upi_payement": "UPI",
     "Cash On Delivery":"COD",
@@ -205,7 +193,7 @@ data['Payment_Mode'] = data['Payment_Mode'].replace({
     "Wallet":"Wallet"
 })
 
-data['Cancellation_Reason'] = data['Cancellation_Reason'].replace({
+data['Cancellation_Reason'] = data['Cancellation_Reason'].str.lower().replace({
     'late delivery':'Late Delivery',
     'restaurant issue':'Restaurant Issue',
     'customer cancelled':'Customer Cancelled'
