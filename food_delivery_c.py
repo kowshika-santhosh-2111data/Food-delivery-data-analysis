@@ -76,17 +76,8 @@ for cols in categorical:
 #duplicate
 data.duplicated().sum()
 
-#data  type conversions
-data_types =  data
-datatype = pd.DataFrame(data_types)
-print("Original DataFrame:")
-print(datatype)
-print("\nData types:")
-print(datatype.dtypes)
-
 #convert data types
 from datetime import date
-from pandas.core.indexes import category
 # ID columns
 data['Order_ID'] = data['Order_ID'].astype(str)
 data['Customer_ID'] = data['Customer_ID'].astype(str)
