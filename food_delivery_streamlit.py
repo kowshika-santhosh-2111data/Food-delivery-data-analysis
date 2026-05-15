@@ -105,7 +105,7 @@ elif option == 'Analyze age group vs order value':
         age_order_value = df.groupby('Age_Group')['Order_Value'].mean().reset_index()
         center_df(age_order_value)
         fig, ax = plt.subplots(figsize=(5.5,3))
-        sns.barplot(data=age_order_value, x='Age_Group', y='avg_Order_Value', ax=ax)
+        sns.barplot(data=age_order_value, x='Age_Group', y='Order_Value', ax=ax)
         ax.set_title('Average Order Value by Age Group',fontsize = 10)
         
         plt.tight_layout()
