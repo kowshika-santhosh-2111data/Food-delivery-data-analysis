@@ -59,7 +59,7 @@ Dashboard Features
 ```
 ## 1.8	KEY INSIGHTS
 ```text
-•	Delivery time increases as delivery distance increases.
+•	Delivery time increases as delivery distance increases. 
 •	Weekend orders are higher compared to weekdays.
 •	Online payment methods such as UPI & Card are widely used.
 •	Late Delivery is one of the major reasons for cancellation of orders.
